@@ -8,7 +8,7 @@ dotenv.config(); // .env 파일에 있는 내용을 불러옵니다.
 const router = express.Router(); // express.Router()를 이용해 라우터를 생성합니다.
 
 // 아이템 생성 API
-router.post("/item", async (req, res) => {
+router.post("/item/create", async (req, res) => {
   const { item_name, item_stat, item_price, item_content } = req.body;
 
   try {
@@ -30,24 +30,74 @@ router.post("/item", async (req, res) => {
   }
 });
 
-const SECRET_KEY = process.env.SECRET_KEY; // 엑세스 토큰을 서명할 비밀키
+// 아이템 수정 API (아이템 가격은 수정 불가)
+router.put("/item/update/:item_name", async (req, res) => {
+  const { item_name } = req.params;
+  const { new_item_name, new_item_stat, new_item_content } = req.body;
 
-// JWT 인증 미들웨어
-const jwtMiddle = (req, res, next) => {
-  const token = req.cookies.token; // 쿠키에서 JWT 토큰 추출
+  try {
+    const updatedItem = await prisma.item.update({
+      where: { item_name: item_name },
+      data: {
+        item_name: new_item_name,
+        item_stat: new_item_stat, // 기존 능력을 덮어씌움
+        item_content: new_item_content,
+      },
+    });
 
-  if (!token) {
-    return next();
+    res
+      .status(200)
+      .json({ message: "아이템이 성공적으로 수정되었습니다.", updatedItem });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "아이템 수정 중 오류가 발생했습니다." });
   }
+});
 
-  jwt.verify(token, SECRET_KEY, (err, user) => {
-    if (err) {
-      return next();
+// 아이템 목록 조회 API
+router.get("/item", async (req, res) => {
+  try {
+    const items = await prisma.item.findMany({
+      select: {
+        item_name: true,
+        item_price: true,
+      },
+    });
+
+    res.status(200).json(items);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "아이템 목록 조회 중 오류가 발생했습니다." });
+  }
+});
+
+// 아이템 상세 조회 API
+router.get('/item/:item_name', async (req, res) => {
+    const { item_name } = req.params;
+  
+    try {
+      const item = await prisma.item.findUnique({
+        where: { item_name: item_name },
+        select: {
+          item_name: true,
+          item_stat: true,
+          item_price: true,
+          item_content: true,
+        }
+      });
+  
+      if (!item) {
+        return res.status(404).json({ error: '해당 아이템을 찾을 수 없습니다.' });
+      }
+  
+      res.status(200).json(item);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: '아이템 조회 중 오류가 발생했습니다.' });
     }
-
-    req.user = user; // 유효한 토큰일 경우 사용자 정보 저장
-    next(); // 다음 미들웨어 또는 라우트로 이동
   });
-};
+  
+
+const SECRET_KEY = process.env.SECRET_KEY; // 엑세스 토큰을 서명할 비밀키
 
 export default router;

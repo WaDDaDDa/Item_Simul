@@ -13,7 +13,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// 테이블 생성
+// 예시 테이블 생성
 model Posts{
   postId Int @id @default(autoincrement()) @map("postId")
   title String @map("title")
@@ -23,4 +23,15 @@ model Posts{
   updatedAt DateTime @updatedAt() @map("updatedAt")
 
   @@map("Posts")
+}
+
+model User {
+  id        Int @id @default(autoincrement()) @map("id")
+  username  String @unique @map("username")
+  password  String @map("password")
+  name      String @map ("name")
+  createdAt DateTime @default(now()) @map("createdAt")
+  updatedAt DateTime @updatedAt() @map("updatedAt")
+
+  @@map("Users")
 }

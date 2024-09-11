@@ -2,14 +2,17 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import PostsRouter from "./routes/posts.router.js";
+import SignupRouter from "./routes/signup.router.js"
 import jwt from "jsonwebtoken";
+import { prisma } from "./utils/prisma/index.js";
+
 
 const app = express();
 const PORT = 3017;
 
 app.use(express.json());
 app.use(cookieParser());
-app.use("/api", [PostsRouter]);
+app.use("/api", [PostsRouter, SignupRouter]);
 
 // 'res.cookie()'를 이용하여 쿠키를 할당하는 API
 app.get("/set-cookie", (req, res) => {

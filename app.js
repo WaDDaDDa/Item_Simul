@@ -13,7 +13,7 @@ import dotenv from 'dotenv';
 dotenv.config(); // .env 파일에 있는 내용을 불러옵니다.
 
 const app = express();
-const PORT = 3017;
+const PORT = process.env.PORT;
 
 app.use(express.json());
 app.use(cookieParser());

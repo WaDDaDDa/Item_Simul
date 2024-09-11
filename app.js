@@ -4,16 +4,19 @@ import cookieParser from "cookie-parser";
 import PostsRouter from "./routes/posts.router.js";
 import SignupRouter from "./routes/signup.router.js"
 import LoginRouter from "./routes/login.router.js"
+import CharacterRouter from "./routes/character.router.js"
 import jwt from "jsonwebtoken";
 import { prisma } from "./utils/prisma/index.js";
+import dotenv from 'dotenv';
 
+dotenv.config(); // .env 파일에 있는 내용을 불러옵니다.
 
 const app = express();
 const PORT = 3017;
 
 app.use(express.json());
 app.use(cookieParser());
-app.use("/api", [PostsRouter, SignupRouter, LoginRouter]);
+app.use("/api", [PostsRouter, SignupRouter, LoginRouter, CharacterRouter]);
 
 // 'res.cookie()'를 이용하여 쿠키를 할당하는 API
 app.get("/set-cookie", (req, res) => {

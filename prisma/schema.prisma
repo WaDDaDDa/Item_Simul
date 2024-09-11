@@ -52,3 +52,14 @@ model Character {
   user User @relation(fields: [userId], references: [id])
   @@map("Character")
 }
+
+// 아이템
+model Item {
+  id         Int     @id @default(autoincrement()) @map("id")
+  item_name  String @unique @map("item_name")
+  item_content String @map("item_content")
+  item_stat  Json @map("item_stat")
+  item_price Int @map("item_price")
+
+  @@map("Item")
+}

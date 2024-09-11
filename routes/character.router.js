@@ -14,12 +14,12 @@ const jwtMiddle = (req, res, next) => {
   const token = req.cookies.token; // 쿠키에서 JWT 토큰 추출
 
   if (!token) {
-    return res.status(401).json({ error: "인증 토큰이 없습니다." });
+    return next();
   }
 
   jwt.verify(token, SECRET_KEY, (err, user) => {
     if (err) {
-      return res.status(403).json({ error: "유효하지 않은 토큰입니다." });
+      return next();
     }
 
     req.user = user; // 유효한 토큰일 경우 사용자 정보 저장
@@ -30,6 +30,10 @@ const jwtMiddle = (req, res, next) => {
 // 캐릭터 post = 생성, 캐릭터 get = 캐릭터 조회, 캐릭터 delete = 캐릭터 삭제
 router.post("/character", jwtMiddle, async (req, res, next) => {
   const { name } = req.body;
+
+  if (req.user === undefined) {
+    return res.status(404).json({ message: "로그인 해주세요" });
+  }
 
   try {
     // 캐릭터명 중복 확인
@@ -67,20 +71,29 @@ router.post("/character", jwtMiddle, async (req, res, next) => {
 });
 
 // 삭제
-router.delete("/character/delete/:characterName", jwtMiddle, async (req, res, next) => {
+router.delete(
+  "/character/delete/:characterName",
+  jwtMiddle,
+  async (req, res, next) => {
     const { characterName } = req.params;
 
     if (!characterName) {
-        return res.status(400).json({ error: "캐릭터 이름이 제공되지 않았습니다." });
-      }
+      return res
+        .status(400)
+        .json({ error: "캐릭터 이름이 제공되지 않았습니다." });
+    }
+
+    if (req.user === undefined) {
+      return res.status(404).json({ message: "로그인 해주세요" });
+    }
 
     try {
       // JWT 토큰에서 사용자 ID 가져오기
       const userId = req.user.userId;
 
       // 캐릭터명 중복 확인
-      const character  = await prisma.character.findUnique({
-        where: { name : characterName },
+      const character = await prisma.character.findUnique({
+        where: { name: characterName },
       });
 
       if (!character) {
@@ -90,14 +103,14 @@ router.delete("/character/delete/:characterName", jwtMiddle, async (req, res, ne
       }
 
       if (character.userId !== userId) {
-        return res
-          .status(403)
-          .json({ error: `해당 ${characterName}캐릭터를 삭제할 권한이 없습니다.` });
+        return res.status(403).json({
+          error: `해당 ${characterName}캐릭터를 삭제할 권한이 없습니다.`,
+        });
       }
 
       // 캐릭터 삭제
       await prisma.character.delete({
-        where: { name : characterName },
+        where: { name: characterName },
       });
 
       res.status(200).json({ message: "캐릭터가 성공적으로 삭제되었습니다." });
@@ -107,5 +120,56 @@ router.delete("/character/delete/:characterName", jwtMiddle, async (req, res, ne
     }
   }
 );
+
+// 캐릭터 상세 조회 API
+// jwtmiddle에서 인증토큰 없는사용자면 respon해버려서 여기까지 못와버린다.
+// 방법 1. 다른 router로 관리. 2. 인증실패일경우 바로리스폰하지 않기.
+router.get("/character/:characterName", jwtMiddle, async (req, res) => {
+  const { characterName } = req.params;
+
+  try {
+    // 캐릭터 이름으로 캐릭터 조회
+    const character = await prisma.character.findUnique({
+      where: { name: characterName },
+      select: {
+        name: true,
+        health: true,
+        power: true,
+        money: true, // money는 본인 캐릭터일 경우에만 포함
+        userId: true, // 캐릭터 소유 여부 확인용으로 포함
+      },
+    });
+
+    if (!character) {
+      return res
+        .status(404)
+        .json({ error: `${characterName}해당 캐릭터를 찾을 수 없습니다.` });
+    }
+
+    // 캐릭터 소유 여부에 따라 응답 데이터 결정
+    let response = {
+      name: character.name,
+      health: character.health,
+      power: character.power,
+    };
+
+    if (req.user === undefined) {
+      return res.status(200).json(response);
+    }
+
+    // JWT 토큰에서 사용자 ID 가져오기
+    const userId = req.user.userId;
+
+    // jwt통과한 유저와 캐릭터의 유저 비교
+    if (character.userId === userId) {
+      response.money = character.money;
+    }
+
+    res.status(200).json(response);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "캐릭터 조회 중 오류가 발생했습니다." });
+  }
+});
 
 export default router;

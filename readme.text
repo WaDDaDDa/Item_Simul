@@ -11,3 +11,30 @@ Item을 생성하여 등록할 수 있고, 이름과 스탯 설명을 변경할 
 모든 아이템 목록을 한번에 볼수 있고 그럴때엔 가격과 이름만이 조회가 됩니다.
 아이템의 이름을 통해 아이템 상세조회가 가능하며 이때는 아이템의 모든 정보를 볼 수 있습니다.
 
+
+1. 회원가입
+http://내주소/api/signup 에서 username, password, passwordConfirm, name 로 회원가입 할 수 있다.
+
+2. 로그인
+http://내주소/api/login 에서 회원가입한 정보를 바탕으로 username, password로 로그인할 수 있다.
+
+3. 캐릭터 생성
+http://내주소/api/character 에서 캐릭터 이름으로 캐릭터를 생성할수 있다. 단 로그인을 해서 쿠키발행을 받아야한다.
+
+4. 캐릭터 삭제
+http://내주소/api/character/delete/:characterName 에서 param에 있는 캐릭터이름의 캐릭터를 조회하여 내 캐릭터면 지울수있다.
+
+5. 캐릭터 조회
+http://내주소/api/character/:characterName 에서 param에 있는 캐릭터이름으로 캐릭터를 조회한다. 내캐릭터면 money까지 조회된다.
+
+6. 아이템 생성 
+http://내주소/api/item/create 에서 아이템을 생성한다.
+
+7. 아이템 전체 조회
+http://내주소/api/item 에서 등록된 전체 아이템을 조회한다.
+
+8. 아이템 수정
+http://내주소/api/item/update/:item_name 에서 param에있는 아이템이름을 조회하여 수정할수 있다.
+
+9. 아이템 상세 조회
+http://내주소/api/item/:item_name 에서 param에있는 아이템의 상세정보를 조회할수 있다.
